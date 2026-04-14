@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { musicService, type Song } from '../../services/musicService';
 import { currentSongAtom, isPlayingAtom, playlistAtom, isSearchOpenAtom, localLikedSongsAtom, localPlaylistsAtom, userAiProfileAtom } from '../../store/atoms';
 import { aiService, type ScoredSong } from '../../services/aiService';
-import { Home, Compass, Play, Plus, Clock, ChevronRight, Activity, Search as SearchIcon, X, Heart, ListMusic, Moon, Users, Copy, Check, Wifi, Bell, Settings } from 'lucide-react';
+import { Home, Play, Plus, Clock, ChevronRight, Activity, Search as SearchIcon, X, Heart, ListMusic, Moon, Users, Copy, Check, Wifi, Bell, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRCode from 'qrcode';
 

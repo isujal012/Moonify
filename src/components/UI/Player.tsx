@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { Play, Pause, SkipBack, SkipForward, Volume2, Heart, Maximize2, ListPlus } from 'lucide-react';
 import { currentSongAtom, isPlayingAtom, volumeAtom, isSearchOpenAtom, isDashboardOpenAtom, currentTimeAtom, lyricsAtom, playlistAtom, localLikedSongsAtom, localPlaylistsAtom, userAiProfileAtom } from '../../store/atoms';
 import { musicService, type Song } from '../../services/musicService';

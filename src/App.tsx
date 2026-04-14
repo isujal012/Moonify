@@ -15,7 +15,7 @@ import { useEffect, useState, useRef } from 'react';
 import { auth, db } from './services/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { Search as SearchIcon, Eye, EyeOff, ExternalLink, Home, Moon, ListMusic, Music } from 'lucide-react';
+import { Search as SearchIcon, Eye, EyeOff, ExternalLink, Home, ListMusic } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 
 function App() {
