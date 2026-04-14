@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Vibur&family=Outfit:wght@300;400;600&family=Space+Grotesk:wght@300;400;700&display=swap');
+
+:root {
+  --bg-dark: #020205;
+  --accent-glow: #00d2ff;
+  --accent-nebula: #7000ff;
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-primary: #f0f0f5;
+  --text-secondary: rgba(240, 240, 245, 0.5);
+  
+  --header-height: 90px;
+  --sidebar-width: 260px;
+  --player-height: 110px;
+  --mobile-nav-height: 70px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: 70px;
+    --player-height: 90px;
+    --sidebar-width: 0px;
+  }
+  
+  body {
+    font-size: 14px;
+    overflow-y: auto; /* Allow scrolling on body if needed for mobile */
+  }
+}
+
+.mobile-only { display: none; }
+@media (max-width: 768px) {
+  .mobile-only { display: block; }
+  .desktop-only { display: none !important; }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden !important; /* Force kill cyan leaks */
+}
+
+body {
+  font-family: 'Vibur', 'Outfit', cursive, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+
+.futuristic-btn {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Space Grotesk', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.futuristic-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--accent-glow);
+  box-shadow: 0 0 15px var(--accent-glow);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Global UI Font Override - Prevent cursive bleeding into UI */
+button, input, optgroup, select, textarea, span {
+  font-family: 'Outfit', 'Space Grotesk', sans-serif !important;
+}
+
+::placeholder { font-family: 'Outfit', sans-serif !important; }
