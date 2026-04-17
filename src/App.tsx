@@ -7,10 +7,11 @@ import { Auth } from './components/UI/Auth';
 import { SplashScreen } from './components/UI/SplashScreen';
 import { BackgroundMusic } from './components/UI/BackgroundMusic';
 import { ErrorBoundary } from './components/UI/ErrorBoundary';
+import { LandingPage } from './components/UI/LandingPage';
 import { BabeAssistant } from './components/UI/BabeAssistant';
 import { ProfileModal } from './components/UI/ProfileModal';
 import { SupportModal } from './components/UI/SupportModal';
-import { userAtom, userProfileAtom, isSearchOpenAtom, isDashboardOpenAtom } from './store/atoms';
+import { userAtom, userProfileAtom, isSearchOpenAtom, isDashboardOpenAtom, isAuthModalOpenAtom } from './store/atoms';
 import { useEffect, useState, useRef } from 'react';
 import { auth, db } from './services/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -24,6 +25,7 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useAtom(isSearchOpenAtom);
   const [isDashOpen, setIsDashOpen] = useAtom(isDashboardOpenAtom);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useAtom(isAuthModalOpenAtom);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [privateSession, setPrivateSession] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -249,10 +251,12 @@ function App() {
       {showSplash && (
         <SplashScreen onComplete={() => setShowSplash(false)} />
       )}
+      
+      {!user && !showSplash && <LandingPage />}
 
-      {!user && !showSplash && (
+      {!user && !showSplash && isAuthModalOpen && (
         <div className="centered-auth-overlay">
-          <Auth onClose={() => {}} />
+          <Auth onClose={() => setIsAuthModalOpen(false)} />
         </div>
       )}
 

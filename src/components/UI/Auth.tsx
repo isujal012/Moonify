@@ -3,14 +3,16 @@ import { useAtom } from 'jotai';
 import { auth, db } from '../../services/firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { userAtom, userProfileAtom } from '../../store/atoms';
-import { Mail, Lock, AtSign } from 'lucide-react';
+import { userAtom, userProfileAtom, isAuthModalOpenAtom } from '../../store/atoms';
+import { Mail, Lock, AtSign, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useSetAtom } from 'jotai';
 
 export function Auth({ onClose }: { onClose: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
   const [, setUser] = useAtom(userAtom);
   const [, setProfile] = useAtom(userProfileAtom);
+  const setIsAuthOpen = useSetAtom(isAuthModalOpenAtom);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -83,6 +85,9 @@ export function Auth({ onClose }: { onClose: () => void }) {
         initial={{ y: 20 }}
         animate={{ y: 0 }}
       >
+        <button className="close-btn" onClick={() => { setIsAuthOpen(false); onClose(); }}>
+          <X size={20} />
+        </button>
 
         <div className="auth-header">
           <h2>{isLogin ? 'Welcome Back Traveler' : 'Begin Your Journey'}</h2>
@@ -137,6 +142,13 @@ export function Auth({ onClose }: { onClose: () => void }) {
               {isLogin ? ' Create Account' : ' Sign In'}
             </span>
           </p>
+          
+          <div className="legal-footer">
+            <a href="/about.html" target="_blank" rel="noopener noreferrer">About</a>
+            <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
+            <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
+            <a href="/contact.html" target="_blank" rel="noopener noreferrer">Contact</a>
+          </div>
         </div>
       </motion.div>
 
@@ -224,6 +236,23 @@ export function Auth({ onClose }: { onClose: () => void }) {
           color: var(--accent-glow);
           cursor: pointer;
           font-weight: 600;
+        }
+        .legal-footer {
+          margin-top: 20px;
+          display: flex;
+          justify-content: center;
+          gap: 15px;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          padding-top: 15px;
+        }
+        .legal-footer a {
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 0.75rem;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .legal-footer a:hover {
+          color: var(--accent-glow);
         }
       `}</style>
     </motion.div>

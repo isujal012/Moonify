@@ -45,4 +45,5 @@ export const userStatsAtom = atom((get) => get(userAiProfileAtom).stats);
 // UI State
 export const isSearchOpenAtom = atom<boolean>(false);
 export const isDashboardOpenAtom = atom<boolean>(true); // Open by default after login
+export const isAuthModalOpenAtom = atom<boolean>(false);
 export const cameraTargetAtom = atom<[number, number, number] | null>(null);
