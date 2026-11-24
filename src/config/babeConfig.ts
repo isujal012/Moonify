@@ -1,15 +1,20 @@
 /**
- * Configuration module for Babe Voice Assistant APIs
- * These keys should be securely managed and stored in your .env file
+ * Configuration module for Babe Voice Assistant APIs.
+ *
+ * The OpenAI key is NOT available in the browser. Whisper transcription is
+ * proxied through the server route at /api/transcribe, which reads the key
+ * from server-side environment variables.
  */
 
 export const babeConfig = {
-  // Check if keys are available in the environment variables
-  hasOpenAI: !!import.meta.env.VITE_OPENAI_API_KEY,
+  // Whisper runs through the server proxy; set VITE_ENABLE_WHISPER=false to disable it.
+  hasOpenAI: import.meta.env.VITE_ENABLE_WHISPER !== 'false',
   hasPicovoice: !!import.meta.env.VITE_PICOVOICE_ACCESS_KEY,
 
+  transcribeEndpoint: '/api/transcribe',
+
   keys: {
-    openai: import.meta.env.VITE_OPENAI_API_KEY || '',
+    // Picovoice runs in the browser and requires a client-side access key.
     picovoice: import.meta.env.VITE_PICOVOICE_ACCESS_KEY || ''
   }
 };
