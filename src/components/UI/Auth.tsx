@@ -4,7 +4,7 @@ import { auth, db } from '../../services/firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { userAtom, userProfileAtom, isAuthModalOpenAtom } from '../../store/atoms';
-import { Mail, Lock, AtSign, X } from 'lucide-react';
+import { Mail, Lock, AtSign, X, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSetAtom } from 'jotai';
 
@@ -19,6 +19,7 @@ export function Auth({ onClose }: { onClose: () => void }) {
   const [handle, setHandle] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +72,16 @@ export function Auth({ onClose }: { onClose: () => void }) {
         onClose();
       }
     } catch (err: any) {
-      setError(err.message);
+      const code = err?.code || '';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+        setError('Invalid email or password. Please check your credentials.');
+      } else if (code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists.');
+      } else if (code === 'auth/weak-password') {
+        setError('Password must be at least 6 characters.');
+      } else {
+        setError(err?.message || 'Authentication failed.');
+      }
     } finally {
       setLoading(false);
     }
@@ -83,11 +93,13 @@ export function Auth({ onClose }: { onClose: () => void }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onClick={() => { setIsAuthOpen(false); onClose(); }}
     >
       <motion.div
         className="auth-container glass"
         initial={{ y: 20 }}
         animate={{ y: 0 }}
+        onClick={(e) => e.stopPropagation()}
       >
         <button className="close-btn" onClick={() => { setIsAuthOpen(false); onClose(); }}>
           <X size={20} />
@@ -124,12 +136,20 @@ export function Auth({ onClose }: { onClose: () => void }) {
           <div className="input-group">
             <Lock size={18} />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <button
+              type="button"
+              className="pw-toggle-btn"
+              onClick={() => setShowPassword(p => !p)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
 
           {error && <p className="error-msg">{error}</p>}
@@ -167,74 +187,132 @@ export function Auth({ onClose }: { onClose: () => void }) {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: transparent;
-          backdrop-filter: none;
+          background: rgba(2, 2, 10, 0.78);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          padding: 16px;
         }
         .auth-container {
-          width: 90%;
-          max-width: 400px;
-          padding: 40px;
+          width: 100%;
+          max-width: 420px;
+          padding: 36px 32px;
           position: relative;
-          backdrop-filter: blur(2px); /* Very subtle blur for readability */
-          background: rgba(0, 0, 0, 0.2); /* Darker but very thin */
+          background: rgba(10, 12, 24, 0.92);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+          font-family: 'Outfit', 'Space Grotesk', sans-serif;
         }
         .close-btn {
           position: absolute;
-          top: 20px;
-          right: 20px;
-          background: none;
-          border: none;
-          color: white;
+          top: 18px;
+          right: 18px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.8);
           cursor: pointer;
+          transition: all 0.2s;
+        }
+        .close-btn:hover {
+          background: rgba(255, 255, 255, 0.14);
+          color: #fff;
         }
         .auth-header {
           text-align: center;
-          margin-bottom: 30px;
+          margin-bottom: 26px;
         }
         .auth-header h2 {
           font-family: 'Space Grotesk', sans-serif;
-          font-size: 1.5rem;
+          font-size: 1.55rem;
+          font-weight: 700;
+          color: #ffffff;
           margin-bottom: 8px;
         }
         .auth-header p {
-          font-size: 0.9rem;
-          color: var(--text-secondary);
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.92rem;
+          color: rgba(240, 240, 245, 0.72);
         }
         form {
           display: flex;
           flex-direction: column;
-          gap: 15px;
+          gap: 14px;
         }
         .input-group {
           display: flex;
           align-items: center;
           gap: 12px;
-          background: rgba(255, 255, 255, 0.05);
-          padding: 12px 15px;
+          background: rgba(255, 255, 255, 0.07);
+          padding: 12px 14px;
           border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: rgba(255, 255, 255, 0.7);
+          transition: border-color 0.2s, background 0.2s;
+        }
+        .input-group:focus-within {
+          border-color: var(--accent-glow);
+          background: rgba(255, 255, 255, 0.1);
         }
         .input-group input {
-          background: none;
+          background: transparent;
           border: none;
-          color: white;
+          color: #ffffff;
+          font-size: 0.95rem;
           flex: 1;
+          min-width: 0;
           outline: none;
         }
+        .input-group input::placeholder {
+          color: rgba(240, 240, 245, 0.45);
+        }
+        .input-group input:-webkit-autofill,
+        .input-group input:-webkit-autofill:hover,
+        .input-group input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #ffffff;
+          -webkit-box-shadow: 0 0 0 1000px rgba(16, 20, 38, 0.98) inset;
+          transition: background-color 5000s ease-in-out 0s;
+        }
+        .pw-toggle-btn {
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.55);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          padding: 2px;
+        }
+        .pw-toggle-btn:hover {
+          color: #ffffff;
+        }
         .error-msg {
-          color: #ff4d4d;
-          font-size: 0.8rem;
+          font-family: 'Outfit', sans-serif;
+          color: #ff8080;
+          background: rgba(255, 77, 77, 0.14);
+          border: 1px solid rgba(255, 77, 77, 0.35);
+          border-radius: 8px;
+          padding: 9px 12px;
+          font-size: 0.85rem;
+          line-height: 1.4;
           text-align: center;
         }
         .futuristic-btn {
           width: 100%;
-          margin-top: 10px;
+          margin-top: 6px;
+          font-weight: 600;
         }
         .auth-footer {
-          margin-top: 25px;
+          margin-top: 22px;
           text-align: center;
+          font-family: 'Outfit', sans-serif;
           font-size: 0.9rem;
-          color: var(--text-secondary);
+          color: rgba(240, 240, 245, 0.72);
         }
         .auth-footer span {
           color: var(--accent-glow);
@@ -242,16 +320,17 @@ export function Auth({ onClose }: { onClose: () => void }) {
           font-weight: 600;
         }
         .legal-footer {
-          margin-top: 20px;
+          margin-top: 18px;
           display: flex;
           justify-content: center;
-          gap: 15px;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
-          padding-top: 15px;
+          gap: 16px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 14px;
         }
         .legal-footer a {
-          color: rgba(255, 255, 255, 0.4);
-          font-size: 0.75rem;
+          font-family: 'Outfit', sans-serif;
+          color: rgba(255, 255, 255, 0.55);
+          font-size: 0.78rem;
           text-decoration: none;
           transition: color 0.2s;
         }
