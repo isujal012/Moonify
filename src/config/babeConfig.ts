@@ -1,15 +1,14 @@
 /**
- * Configuration module for Babe Voice Assistant APIs
- * These keys should be securely managed and stored in your .env file
+ * Configuration module for Babe Voice Assistant APIs.
+ * The OpenAI key never reaches the browser: transcription goes through the
+ * server-side /api/transcribe endpoint. Only a boolean flag is bundled.
  */
 
 export const babeConfig = {
-  // Check if keys are available in the environment variables
-  hasOpenAI: !!import.meta.env.VITE_OPENAI_API_KEY,
+  hasOpenAI: __HAS_OPENAI__,
   hasPicovoice: !!import.meta.env.VITE_PICOVOICE_ACCESS_KEY,
 
   keys: {
-    openai: import.meta.env.VITE_OPENAI_API_KEY || '',
     picovoice: import.meta.env.VITE_PICOVOICE_ACCESS_KEY || ''
   }
 };
