@@ -11,6 +11,7 @@ import { LandingPage } from './components/UI/LandingPage';
 import { BabeAssistant } from './components/UI/BabeAssistant';
 import { ProfileModal } from './components/UI/ProfileModal';
 import { SupportModal } from './components/UI/SupportModal';
+import { HealthPage } from './components/UI/HealthPage';
 import { userAtom, userProfileAtom, isSearchOpenAtom, isDashboardOpenAtom, isAuthModalOpenAtom } from './store/atoms';
 import { useEffect, useState, useRef } from 'react';
 import { auth, db } from './services/firebaseConfig';
@@ -20,6 +21,10 @@ import { Search as SearchIcon, Eye, EyeOff, ExternalLink, Home, ListMusic } from
 import { AnimatePresence } from 'framer-motion';
 
 function App() {
+  if (typeof window !== 'undefined' && window.location.pathname === '/health') {
+    return <HealthPage />;
+  }
+
   const [user, setUser] = useAtom(userAtom);
   const [profile, setProfile] = useAtom(userProfileAtom);
   const [showSplash, setShowSplash] = useState(true);

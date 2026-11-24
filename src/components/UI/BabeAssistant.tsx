@@ -240,9 +240,8 @@ export function BabeAssistant() {
         formData.append('language', 'en');
 
         try {
-          const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          const res = await fetch('/api/transcribe', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${babeConfig.keys.openai}` },
             body: formData
           });
           const data = await res.json();

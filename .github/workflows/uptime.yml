@@ -1,0 +1,25 @@
+name: Uptime Bot
+
+on:
+  schedule:
+    # Ping every 10 minutes to monitor uptime and keep the service warm
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Moonify /health endpoint
+        env:
+          TARGET_URL: ${{ vars.UPTIME_URL || 'https://cosmic-music-player.onrender.com/health.json' }}
+        run: |
+          echo "Checking $TARGET_URL..."
+          STATUS=$(curl -s -o /tmp/health.out -w "%{http_code}" --max-time 15 "$TARGET_URL")
+          echo "HTTP Status: $STATUS"
+          cat /tmp/health.out
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+
