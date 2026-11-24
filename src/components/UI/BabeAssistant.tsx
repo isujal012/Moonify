@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { currentSongAtom, isPlayingAtom, volumeAtom, playlistAtom } from '../../store/atoms';
 import { musicService } from '../../services/musicService';
-import { babeConfig } from '../../config/babeConfig';
+import { babeConfig, TRANSCRIBE_ENDPOINT } from '../../config/babeConfig';
 import { usePorcupine } from '@picovoice/porcupine-react';
 import { Mic, MicOff, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -236,13 +236,10 @@ export function BabeAssistant() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const formData = new FormData();
         formData.append('file', audioBlob, 'command.webm');
-        formData.append('model', 'whisper-1');
-        formData.append('language', 'en');
 
         try {
-          const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+          const res = await fetch(TRANSCRIBE_ENDPOINT, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${babeConfig.keys.openai}` },
             body: formData
           });
           const data = await res.json();
