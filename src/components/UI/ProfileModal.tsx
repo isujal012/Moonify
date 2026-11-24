@@ -13,7 +13,7 @@ interface ProfileModalProps {
 
 export function ProfileModal({ open, onClose }: ProfileModalProps) {
   const [profile] = useAtom(userProfileAtom);
-  const user = auth.currentUser;
+  const user = auth?.currentUser ?? null;
 
   // Password change state
   const [showPasswordSection, setShowPasswordSection] = useState(false);

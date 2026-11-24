@@ -23,6 +23,10 @@ export function Auth({ onClose }: { onClose: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!auth || !db) {
+      setError('Firebase is not configured. Add VITE_FIREBASE_* keys to .env to enable sign in.');
+      return;
+    }
     setLoading(true);
 
     try {

@@ -33,12 +33,20 @@ function App() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!auth) {
+      setUser(null);
+      setProfile(null);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setUser(firebaseUser);
-        const profileSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (profileSnap.exists()) {
-          setProfile(profileSnap.data() as any);
+        if (db) {
+          const profileSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (profileSnap.exists()) {
+            setProfile(profileSnap.data() as any);
+          }
         }
       } else {
         setUser(null);
@@ -63,7 +71,7 @@ function App() {
 
   const handleLogout = () => {
     setShowUserMenu(false);
-    auth.signOut();
+    auth?.signOut();
   };
 
   const displayName = profile?.handle || user?.displayName || 'Traveler';

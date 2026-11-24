@@ -1,4 +1,26 @@
+import { buildDownloadUrls } from './jiosaavnCrypto';
+
 export const API_BASE_URL = 'https://saavn.sumit.co/api';
+const JIOSAAVN_PROXY_URL = '/api/jiosaavn';
+
+const decodeHtml = (str: string): string => {
+  if (!str) return '';
+  return str
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;|&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+};
+
+const buildImageSizes = (img: string) => {
+  if (!img) return [];
+  return [
+    { quality: '50x50', link: img.replace(/150x150|500x500|50x50/, '50x50') },
+    { quality: '150x150', link: img.replace(/150x150|500x500|50x50/, '150x150') },
+    { quality: '500x500', link: img.replace(/150x150|500x500|50x50/, '500x500') },
+  ];
+};
 
 export interface Song {
   id: string;
@@ -30,33 +52,62 @@ export interface Song {
 
 const mapSong = (s: any): Song => ({
   ...s,
-  name: s.name || s.title || 'Unknown Song',
-  image: Array.isArray(s.image) 
-    ? s.image.map((i: any) => ({ quality: i.quality, link: i.url || i.link })) 
-    : [],
-  downloadUrl: Array.isArray(s.downloadUrl) 
-    ? s.downloadUrl.map((i: any) => ({ quality: i.quality, link: i.url || i.link })) 
-    : [],
+  name: decodeHtml(s.name || s.title || s.song || 'Unknown Song'),
+  album: typeof s.album === 'object' && s.album !== null
+    ? { ...s.album, name: decodeHtml(s.album.name || '') }
+    : { id: s.albumid || '', name: decodeHtml(s.album || ''), url: s.album_url || '' },
+  image: Array.isArray(s.image)
+    ? s.image.map((i: any) => ({ quality: i.quality, link: i.url || i.link }))
+    : typeof s.image === 'string'
+      ? buildImageSizes(s.image)
+      : [],
+  downloadUrl: Array.isArray(s.downloadUrl)
+    ? s.downloadUrl.map((i: any) => ({ quality: i.quality, link: i.url || i.link }))
+    : s.encrypted_media_url
+      ? buildDownloadUrls(s.encrypted_media_url, s['320kbps'])
+      : s.media_preview_url
+        ? [{ quality: '96kbps', link: s.media_preview_url }]
+        : [],
   duration: s.duration ? parseInt(s.duration) : 0,
   primaryArtists: (() => {
-    const pa = s.primaryArtists;
-    if (typeof pa === 'string' && pa.trim() && pa.trim() !== 'Various Artists') return pa.trim();
-    if (Array.isArray(pa) && pa.length > 0) return pa.map((a: any) => a.name || a).filter(Boolean).join(', ');
-    if (pa && typeof pa === 'object' && pa.name) return pa.name;
+    const pa = s.primaryArtists ?? s.primary_artists ?? s.singers ?? s.music;
+    if (typeof pa === 'string' && pa.trim() && pa.trim() !== 'Various Artists') return decodeHtml(pa.trim());
+    if (Array.isArray(pa) && pa.length > 0) return decodeHtml(pa.map((a: any) => a.name || a).filter(Boolean).join(', '));
+    if (pa && typeof pa === 'object' && pa.name) return decodeHtml(pa.name);
     // Fallback: try artists array field (some API versions use this key)
     const arts = s.artists?.primary || s.artists?.all || s.artists;
-    if (Array.isArray(arts) && arts.length > 0) return arts.map((a: any) => a.name || a).filter(Boolean).join(', ');
+    if (Array.isArray(arts) && arts.length > 0) return decodeHtml(arts.map((a: any) => a.name || a).filter(Boolean).join(', '));
     return 'Unknown Artist';
   })(),
 });
 
+async function fetchJioSaavn(params: Record<string, string>): Promise<any> {
+  const qs = new URLSearchParams({
+    ...params,
+    _format: 'json',
+    _marker: '0',
+    ctx: 'web6dot0',
+  });
+  const response = await fetch(`${JIOSAAVN_PROXY_URL}?${qs.toString()}`);
+  if (!response.ok) throw new Error(`JioSaavn proxy HTTP ${response.status}`);
+  return response.json();
+}
+
 // Translation module removed to preserve native languages natively via LRCLIB
 
 export const musicService = {
-  // ... other methods ...
   async searchSongs(query: string): Promise<Song[]> {
     try {
+      const data = await fetchJioSaavn({ __call: 'search.getResults', q: query });
+      const results = data.results || data.data?.results || [];
+      if (results.length > 0) return results.map(mapSong);
+    } catch {
+      // Fallback to external mirror if proxy is unavailable
+    }
+
+    try {
       const response = await fetch(`${API_BASE_URL}/search/songs?query=${encodeURIComponent(query)}`);
+      if (!response.ok) return [];
       const data = await response.json();
       const results = data.data?.results || [];
       return results.map(mapSong);
@@ -68,7 +119,16 @@ export const musicService = {
 
   async getSongDetails(id: string): Promise<Song | null> {
     try {
+      const data = await fetchJioSaavn({ __call: 'song.getDetails', pids: id });
+      const song = data[id] || data.songs?.[0];
+      if (song) return mapSong(song);
+    } catch {
+      // Fallback below
+    }
+
+    try {
       const response = await fetch(`${API_BASE_URL}/songs?id=${id}`);
+      if (!response.ok) return null;
       const data = await response.json();
       const song = data.data?.[0];
       return song ? mapSong(song) : null;
@@ -80,7 +140,15 @@ export const musicService = {
 
   async getRecommendations(id: string): Promise<Song[]> {
     try {
+      const data = await fetchJioSaavn({ __call: 'reco.getreco', pid: id });
+      if (Array.isArray(data) && data.length > 0) return data.map(mapSong);
+    } catch {
+      // Fallback below
+    }
+
+    try {
       const response = await fetch(`${API_BASE_URL}/songs/${id}/suggestions`);
+      if (!response.ok) return [];
       const data = await response.json();
       const results = data.data || [];
       return results.map(mapSong);
@@ -91,37 +159,38 @@ export const musicService = {
   },
 
   async getTrending(): Promise<Song[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/search/songs?query=latest`);
-      const data = await response.json();
-      const results = data.data?.results || [];
-      return results.map(mapSong);
-    } catch (error) {
-      console.error('Error fetching trending songs:', error);
-      return [];
-    }
+    return this.searchSongs('latest');
   },
 
   async getCharts(): Promise<Song[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/search/songs?query=charts`);
-      const data = await response.json();
-      const results = data.data?.results || [];
-      return results.map(mapSong);
-    } catch (error) {
-      console.error('Error fetching charts:', error);
-      return [];
-    }
+    return this.searchSongs('charts');
   },
 
   async searchArtist(name: string): Promise<any | null> {
     try {
+      const data = await fetchJioSaavn({ __call: 'search.getArtistResults', q: name });
+      const result = data.results?.[0];
+      if (result) {
+        try {
+          const detail = await fetchJioSaavn({ __call: 'artist.getArtistPageDetails', artistId: result.id });
+          if (detail) return detail;
+        } catch {
+          return result;
+        }
+        return result;
+      }
+    } catch {
+      // Fallback below
+    }
+
+    try {
       const resp = await fetch(`${API_BASE_URL}/search/artists?query=${encodeURIComponent(name)}`);
+      if (!resp.ok) return null;
       const data = await resp.json();
       const result = data.data?.results?.[0];
       if (!result) return null;
-      // Fetch full artist details
       const detailResp = await fetch(`${API_BASE_URL}/artists/${result.id}`);
+      if (!detailResp.ok) return result;
       const detail = await detailResp.json();
       return detail.data || result;
     } catch {

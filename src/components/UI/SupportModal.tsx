@@ -28,7 +28,7 @@ const PRIORITIES = [
 
 export function SupportModal({ open, onClose }: SupportModalProps) {
   const [profile] = useAtom(userProfileAtom);
-  const user = auth.currentUser;
+  const user = auth?.currentUser ?? null;
 
   const [category, setCategory] = useState('');
   const [priority, setPriority] = useState('medium');
@@ -57,6 +57,10 @@ export function SupportModal({ open, onClose }: SupportModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!db) {
+      setError('Support tickets require Firebase configuration.');
+      return;
+    }
 
     if (!category) {
       setError('Please select a category');
